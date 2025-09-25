@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rialo - Mini Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            background: #f5f1eb;
+            background-image: 
+                url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Cpath d="M20,20 Q40,10 60,20 Q80,30 80,50 Q70,70 50,70 L50,85 Q45,90 40,85 L40,70 Q20,60 15,45 Q10,30 20,20 Z M25,45 Q35,35 45,45 Q55,55 45,65 Q35,75 25,65 Q15,55 25,45 Z" fill="%23282828" opacity="0.05"/%3E%3C/svg%3E'),
+                url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Cpath d="M20,20 Q40,10 60,20 Q80,30 80,50 Q70,70 50,70 L50,85 Q45,90 40,85 L40,70 Q20,60 15,45 Q10,30 20,20 Z M25,45 Q35,35 45,45 Q55,55 45,65 Q35,75 25,65 Q15,55 25,45 Z" fill="%23282828" opacity="0.03"/%3E%3C/svg%3E'),
+                url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Cpath d="M20,20 Q40,10 60,20 Q80,30 80,50 Q70,70 50,70 L50,85 Q45,90 40,85 L40,70 Q20,60 15,45 Q10,30 20,20 Z M25,45 Q35,35 45,45 Q55,55 45,65 Q35,75 25,65 Q15,55 25,45 Z" fill="%23282828" opacity="0.02"/%3E%3C/svg%3E');
+            background-size: 200px 200px, 150px 150px, 100px 100px;
+            background-position: 0 0, 300px 200px, 600px 400px;
+            background-repeat: repeat;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f1eb 0%, #e8e0d6 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+
+        .welcome-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .rialo-logo {
+            width: 150px;
+            height: 150px;
+            background: #282828;
+            border-radius: 40px;
+            position: relative;
+            margin-bottom: 30px;
+            animation: logoFloat 3s ease-in-out infinite;
+            box-shadow: 0 10px 30px rgba(40, 40, 40, 0.3);
+        }
+
+        .rialo-logo::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 50px;
+            background: #f5f1eb;
+            border-radius: 20px;
+            clip-path: polygon(0% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 0% 100%, 30% 70%, 30% 30%);
+        }
+
+        .rialo-text {
+            font-size: 42px;
+            font-weight: bold;
+            color: #282828;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .welcome-form {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 3px solid #282828;
+        }
+
+        .form-title {
+            font-size: 22px;
+            color: #282828;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .name-input {
+            width: 280px;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #282828;
+            border-radius: 10px;
+            background: #f5f1eb;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .name-input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(40, 40, 40, 0.2);
+        }
+
+        .start-btn {
+            background: #282828;
+            color: #f5f1eb;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 40, 40, 0.3);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Game Container */
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            background: linear-gradient(135deg, rgba(245, 241, 235, 0.95) 0%, rgba(232, 224, 214, 0.95) 50%, rgba(245, 241, 235, 0.95) 100%);
+        }
+
+        .game-container.active {
+            opacity: 1;
+        }
+
+        .game-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: rgba(40, 40, 40, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            color: #f5f1eb;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-mini {
+            width: 40px;
+            height: 40px;
+            background: #f5f1eb;
+            border-radius: 10px;
+            position: relative;
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+
+        .logo-mini::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 16px;
+            background: #282828;
+            border-radius: 6px;
+            clip-path: polygon(0% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 0% 100%, 30% 70%, 30% 30%);
+        }
+
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .player-info {
+            color: #f5f1eb;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .score-item {
+            background: rgba(245, 241, 235, 0.15);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 2px solid #f5f1eb;
+        }
+
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            cursor: crosshair;
+            padding-top: 80px;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+            background: #282828;
+            box-shadow: 0 3px 10px rgba(40, 40, 40, 0.4);
+            border: 2px solid #f5f1eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f5f1eb;
+            font-weight: bold;
+            animation: bubbleFloat 1.5s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        .bubble.bomb {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            border: 2px solid #fca5a5;
+            box-shadow: 0 3px 10px rgba(220, 38, 38, 0.5);
+            animation: bombPulse 1s ease-in-out infinite;
+        }
+
+        .bubble.bomb:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(220, 38, 38, 0.7);
+        }
+
+        .bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(40, 40, 40, 0.4);
+        }
+
+        .bubble.popping {
+            animation: explode 0.4s ease-out forwards;
+        }
+
+        @keyframes bubbleFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes bombPulse {
+            0%, 100% { transform: translateY(0px) scale(1); box-shadow: 0 3px 10px rgba(220, 38, 38, 0.5); }
+            50% { transform: translateY(-2px) scale(1.02); box-shadow: 0 5px 15px rgba(220, 38, 38, 0.7); }
+        }
+
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.8); opacity: 0.7; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #282828;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(40, 40, 40, 0.3);
+        }
+
+        .score-popup {
+            position: absolute;
+            color: #282828;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(245, 241, 235, 0.8);
+            animation: scoreFloat 1.2s ease-out forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        @keyframes scoreFloat {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(245, 241, 235, 0.98);
+            color: #282828;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 3px solid #282828;
+            display: none;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 2000;
+        }
+
+        .game-over h2 {
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        .game-over p {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .restart-btn {
+            background: #282828;
+            color: #f5f1eb;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 40, 40, 0.3);
+        }
+
+        .timer-display {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #f5f1eb;
+            font-weight: bold;
+            font-size: 24px;
+            background: rgba(40, 40, 40, 0.9);
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: 3px solid #f5f1eb;
+            z-index: 1002;
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .timer-display.warning {
+            color: #dc2626;
+            border-color: #dc2626;
+            background: rgba(220, 38, 38, 0.9);
+            animation: timerWarning 0.5s ease-in-out infinite;
+        }
+
+        @keyframes timerWarning {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+
+        .level-requirement {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            color: #f5f1eb;
+            font-weight: bold;
+            font-size: 16px;
+            background: rgba(40, 40, 40, 0.9);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 2px solid #f5f1eb;
+            z-index: 1001;
+            text-align: center;
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #282828;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            background: rgba(245, 241, 235, 0.9);
+            padding: 12px 24px;
+            border-radius: 20px;
+            border: 2px solid #282828;
+            z-index: 1000;
+        }
+
+        .combo-text {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: #282828;
+            text-shadow: 2px 2px 4px rgba(245, 241, 235, 0.8);
+            animation: comboAnimation 0.8s ease-out forwards;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        @keyframes comboAnimation {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 0; }
+        }
+
+        .death-explosion {
+            position: absolute;
+            font-size: 48px;
+            font-weight: bold;
+            color: #dc2626;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            animation: deathAnimation 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 500;
+        }
+
+        @keyframes deathAnimation {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            25% { transform: scale(1.5) rotate(-90deg); opacity: 1; }
+            75% { transform: scale(1.2) rotate(0deg); opacity: 0.8; }
+            100% { transform: scale(1) rotate(90deg); opacity: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="rialo-logo"></div>
+        <div class="rialo-text">Rialo</div>
+        <div class="welcome-form">
+            <div class="form-title">Ready to Play?</div>
+            <input type="text" class="name-input" id="playerName" placeholder="Enter your name..." maxlength="15">
+            <br>
+            <button class="start-btn" id="startGameBtn" onclick="startGame()">Let's Go!</button>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" id="gameContainer">
+        <div class="game-header">
+            <div class="title">
+                <div class="logo-mini"></div>
+                Rialo Game
+            </div>
+            <div class="player-info">
+                <div class="score-item">Player: <span id="playerDisplay">Guest</span></div>
+                <div class="score-item">Score: <span id="score">0</span></div>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="timer-display" id="timerDisplay">
+                Time: <span id="timeRemaining">30</span>s
+            </div>
+            <div class="level-requirement">
+                Level <span id="level">1</span><br>
+                Need: <span id="levelRequirement">700</span><br>
+                Current: <span id="score2">0</span>
+            </div>
+            <div class="instructions">30 seconds per level! Meet the target score or lose!</div>
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            <h2>Game Over!</h2>
+            <p><strong><span id="gameOverPlayer"></span></strong><br>Final Score: <span id="finalScore">0</span></p>
+            <button class="restart-btn" onclick="resetGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        class RialoGame {
+            constructor() {
+                this.score = 0;
+                this.level = 1;
+                this.playerName = 'Guest';
+                this.bubbles = [];
+                this.gameArea = document.getElementById('gameArea');
+                this.isGameRunning = false;
+                this.bubbleSpeed = 0.3;
+                this.spawnRate = 400;
+                this.maxBubbles = 20;
+                this.fillScreen = true;
+                this.baseBubbleSize = 80;
+                this.levelTimer = 30;
+                this.timeRemaining = 30;
+                this.timerInterval = null;
+                this.combo = 0;
+                this.lastPopTime = 0;
+            }
+
+            setPlayerName(name) {
+                this.playerName = name || 'Guest';
+                document.getElementById('playerDisplay').textContent = this.playerName;
+                document.getElementById('gameOverPlayer').textContent = this.playerName;
+            }
+
+            startGame() {
+                this.score = 0;
+                this.level = 1;
+                this.bubbles = [];
+                this.combo = 0;
+                this.isGameRunning = true;
+                this.bubbleSpeed = 0.3;
+                this.spawnRate = 400;
+                this.maxBubbles = 20;
+                this.timeRemaining = 30;
+                
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+                
+                document.getElementById('gameOver').style.display = 'none';
+                document.getElementById('gameContainer').classList.add('active');
+                
+                this.updateScore();
+                this.updateLevel();
+                this.updateTimer();
+                this.clearBubbles();
+                
+                this.startLevelTimer();
+                this.gameLoop();
+                this.spawnLoop();
+            }
+
+            getLevelRequirement() {
+                return this.level * 600 + (this.level * this.level * 100);
+            }
+
+            startLevelTimer() {
+                this.timeRemaining = this.levelTimer;
+                this.updateTimer();
+                
+                this.timerInterval = setInterval(() => {
+                    this.timeRemaining--;
+                    this.updateTimer();
+                    
+                    const timerDisplay = document.getElementById('timerDisplay');
+                    if (this.timeRemaining <= 10) {
+                        timerDisplay.classList.add('warning');
+                    } else {
+                        timerDisplay.classList.remove('warning');
+                    }
+                    
+                    if (this.timeRemaining <= 0) {
+                        clearInterval(this.timerInterval);
+                        this.checkLevelCompletion();
+                    }
+                }, 1000);
+            }
+
+            checkLevelCompletion() {
+                const requiredScore = this.getLevelRequirement();
+                
+                if (this.score >= requiredScore) {
+                    this.levelUp();
+                } else {
+                    this.gameOverByTime();
+                }
+            }
+
+            gameOverByTime() {
+                this.isGameRunning = false;
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+                
+                const timeUpMsg = document.createElement('div');
+                timeUpMsg.className = 'death-explosion';
+                timeUpMsg.innerHTML = 'TIME\'S UP!<br>Not enough points!';
+                timeUpMsg.style.left = '50%';
+                timeUpMsg.style.top = '40%';
+                timeUpMsg.style.transform = 'translate(-50%, -50%)';
+                timeUpMsg.style.fontSize = '32px';
+                
+                this.gameArea.appendChild(timeUpMsg);
+                
+                setTimeout(() => {
+                    if (timeUpMsg.parentNode) {
+                        timeUpMsg.parentNode.removeChild(timeUpMsg);
+                    }
+                    this.gameOver();
+                }, 2000);
+            }
+
+            updateTimer() {
+                document.getElementById('timeRemaining').textContent = this.timeRemaining;
+            }
+
+            createBubble() {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                const bombChance = Math.min(0.70 + (this.level * 0.03), 0.85);
+                const isBomb = Math.random() < bombChance;
+                
+                const levelSizeIncrease = (this.level - 1) * 15;
+                const size = this.baseBubbleSize + levelSizeIncrease + Math.random() * 20;
+                
+                const x = Math.random() * (this.gameArea.offsetWidth - size);
+                const y = Math.random() * (this.gameArea.offsetHeight - 150) + 100;
+                
+                bubble.style.width = size + 'px';
+                bubble.style.height = size + 'px';
+                bubble.style.left = x + 'px';
+                bubble.style.top = y + 'px';
+                bubble.style.fontSize = Math.floor(size / 4) + 'px';
+                
+                if (isBomb) {
+                    bubble.classList.add('bomb');
+                    bubble.textContent = 'Scam';
+                    bubble.style.fontSize = Math.floor(size / 6) + 'px';
+                } else {
+                    bubble.innerHTML = '<img src="rialo-logo.png" style="width: ' + Math.floor(size * 0.6) + 'px; height: ' + Math.floor(size * 0.6) + 'px; object-fit: contain; filter: brightness(1.2);" alt="Rialo Logo">';
+                }
+                
+                bubble.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (isBomb) {
+                        this.hitScam(bubble, e.clientX, e.clientY);
+                    } else {
+                        this.popBubble(bubble, e.clientX, e.clientY);
+                    }
+                });
+                
+                this.gameArea.appendChild(bubble);
+                this.bubbles.push({
+                    element: bubble,
+                    x: x,
+                    y: y,
+                    size: size,
+                    speed: this.bubbleSpeed + Math.random() * 0.3,
+                    isBomb: isBomb,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -(this.bubbleSpeed + Math.random() * 0.3)
+                });
+            }
+
+            hitScam(bubbleElement, clickX, clickY) {
+                const bubbleIndex = this.bubbles.findIndex(b => b.element === bubbleElement);
+                if (bubbleIndex === -1) return;
+                
+                const bubble = this.bubbles[bubbleIndex];
+                
+                this.createScamExplosion(bubble.x + bubble.size/2, bubble.y + bubble.size/2);
+                this.showDeathExplosion(clickX, clickY);
+                
+                bubble.element.classList.add('popping');
+                setTimeout(() => {
+                    if (bubble.element.parentNode) {
+                        bubble.element.parentNode.removeChild(bubble.element);
+                    }
+                }, 400);
+                
+                this.bubbles.splice(bubbleIndex, 1);
+                
+                setTimeout(() => {
+                    this.gameOver();
+                }, 1000);
+            }
+
+            showDeathExplosion(x, y) {
+                const rect = this.gameArea.getBoundingClientRect();
+                const deathText = document.createElement('div');
+                deathText.className = 'death-explosion';
+                deathText.textContent = 'SCAMMED! GAME OVER!';
+                deathText.style.left = (x - rect.left) + 'px';
+                deathText.style.top = (y - rect.top) + 'px';
+                deathText.style.transform = 'translate(-50%, -50%)';
+                
+                this.gameArea.appendChild(deathText);
+                
+                setTimeout(() => {
+                    if (deathText.parentNode) {
+                        deathText.parentNode.removeChild(deathText);
+                    }
+                }, 1000);
+            }
+
+            createScamExplosion(x, y) {
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.background = '#dc2626';
+                    particle.style.width = (8 + Math.random() * 8) + 'px';
+                    particle.style.height = particle.style.width;
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    
+                    this.gameArea.appendChild(particle);
+                    
+                    const angle = (Math.PI * 2 * i) / 20;
+                    const velocity = 120 + Math.random() * 80;
+                    const vx = Math.cos(angle) * velocity;
+                    const vy = Math.sin(angle) * velocity;
+                    
+                    let particleX = x;
+                    let particleY = y;
+                    let life = 1;
+                    
+                    const animateParticle = () => {
+                        life -= 0.015;
+                        if (life <= 0) {
+                            if (particle.parentNode) {
+                                particle.parentNode.removeChild(particle);
+                            }
+                            return;
+                        }
+                        
+                        particleX += vx * 0.02;
+                        particleY += vy * 0.02;
+                        
+                        particle.style.left = particleX + 'px';
+                        particle.style.top = particleY + 'px';
+                        particle.style.opacity = life;
+                        particle.style.transform = 'scale(' + life + ')';
+                        
+                        requestAnimationFrame(animateParticle);
+                    };
+                    
+                    requestAnimationFrame(animateParticle);
+                }
+                
+                this.gameArea.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    this.gameArea.style.animation = '';
+                }, 500);
+            }
+
+            popBubble(bubbleElement, clickX, clickY) {
+                const bubbleIndex = this.bubbles.findIndex(b => b.element === bubbleElement);
+                if (bubbleIndex === -1) return;
+                
+                const bubble = this.bubbles[bubbleIndex];
+                
+                if (bubble.isBomb) return;
+                
+                const now = Date.now();
+                
+                if (now - this.lastPopTime < 1000) {
+                    this.combo++;
+                } else {
+                    this.combo = 1;
+                }
+                this.lastPopTime = now;
+                
+                let points = Math.floor(bubble.size * 0.8) + 50;
+                if (this.combo > 1) {
+                    points *= this.combo;
+                }
+                
+                this.score += points;
+                this.updateScore();
+                
+                this.showScorePopup(clickX, clickY, points, this.combo);
+                
+                this.createExplosion(bubble.x + bubble.size/2, bubble.y + bubble.size/2);
+                
+                bubble.element.classList.add('popping');
+                setTimeout(() => {
+                    if (bubble.element.parentNode) {
+                        bubble.element.parentNode.removeChild(bubble.element);
+                    }
+                }, 400);
+                
+                this.bubbles.splice(bubbleIndex, 1);
+                
+                const requiredScore = this.getLevelRequirement();
+                if (this.score >= requiredScore && this.timeRemaining > 0) {
+                    clearInterval(this.timerInterval);
+                    this.levelUp();
+                }
+            }
+
+            showScorePopup(x, y, points, combo) {
+                const rect = this.gameArea.getBoundingClientRect();
+                const popup = document.createElement('div');
+                popup.className = 'score-popup';
+                
+                let text = '+' + points;
+                if (combo > 1) {
+                    text = text + ' x' + combo + ' COMBO!';
+                }
+                
+                popup.textContent = text;
+                popup.style.left = (x - rect.left) + 'px';
+                popup.style.top = (y - rect.top) + 'px';
+                popup.style.transform = 'translate(-50%, -50%)';
+                
+                this.gameArea.appendChild(popup);
+                
+                setTimeout(() => {
+                    if (popup.parentNode) {
+                        popup.parentNode.removeChild(popup);
+                    }
+                }, 1200);
+            }
+
+            createExplosion(x, y) {
+                const rialoText = document.createElement('div');
+                rialoText.className = 'combo-text';
+                rialoText.textContent = 'RIALO!';
+                rialoText.style.left = x + 'px';
+                rialoText.style.top = y + 'px';
+                rialoText.style.transform = 'translate(-50%, -50%)';
+                
+                this.gameArea.appendChild(rialoText);
+                
+                for (let i = 0; i < 8; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    
+                    this.gameArea.appendChild(particle);
+                    
+                    const angle = (Math.PI * 2 * i) / 8;
+                    const velocity = 80 + Math.random() * 40;
+                    const vx = Math.cos(angle) * velocity;
+                    const vy = Math.sin(angle) * velocity;
+                    
+                    let particleX = x;
+                    let particleY = y;
+                    let life = 1;
+                    
+                    const animateParticle = () => {
+                        life -= 0.025;
+                        if (life <= 0) {
+                            if (particle.parentNode) {
+                                particle.parentNode.removeChild(particle);
+                            }
+                            return;
+                        }
+                        
+                        particleX += vx * 0.02;
+                        particleY += vy * 0.02;
+                        
+                        particle.style.left = particleX + 'px';
+                        particle.style.top = particleY + 'px';
+                        particle.style.opacity = life;
+                        particle.style.transform = 'scale(' + life + ')';
+                        
+                        requestAnimationFrame(animateParticle);
+                    };
+                    
+                    requestAnimationFrame(animateParticle);
+                }
+                
+                setTimeout(() => {
+                    if (rialoText.parentNode) {
+                        rialoText.parentNode.removeChild(rialoText);
+                    }
+                }, 800);
+            }
+
+            levelUp() {
+                this.level++;
+                
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+                
+                this.bubbleSpeed += 0.2;
+                this.spawnRate = Math.max(200, this.spawnRate - 40);
+                this.maxBubbles = Math.min(28, this.maxBubbles + 1);
+                
+                this.updateLevel();
+                
+                const levelMsg = document.createElement('div');
+                levelMsg.className = 'score-popup';
+                levelMsg.innerHTML = 'LEVEL ' + this.level + ' UNLOCKED!<br>Get ' + this.getLevelRequirement() + ' points<br>in ' + this.levelTimer + ' seconds!';
+                levelMsg.style.left = '50%';
+                levelMsg.style.top = '35%';
+                levelMsg.style.transform = 'translate(-50%, -50%)';
+                levelMsg.style.fontSize = '20px';
+                levelMsg.style.color = '#282828';
+                levelMsg.style.textAlign = 'center';
+                
+                this.gameArea.appendChild(levelMsg);
+                
+                setTimeout(() => {
+                    if (levelMsg.parentNode) {
+                        levelMsg.parentNode.removeChild(levelMsg);
+                    }
+                    this.startLevelTimer();
+                }, 3000);
+            }
+
+            updateScore() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('score2').textContent = this.score;
+                document.getElementById('levelRequirement').textContent = this.getLevelRequirement();
+            }
+
+            updateLevel() {
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('levelRequirement').textContent = this.getLevelRequirement();
+            }
+
+            gameLoop() {
+                if (!this.isGameRunning) return;
+                
+                this.bubbles.forEach((bubble, index) => {
+                    const currentSpeed = this.bubbleSpeed * (0.8 + this.level * 0.2);
+                    bubble.y += bubble.vy * currentSpeed;
+                    bubble.x += bubble.vx * currentSpeed;
+                    
+                    if (bubble.x <= 0 || bubble.x >= this.gameArea.offsetWidth - bubble.size) {
+                        bubble.vx = -bubble.vx;
+                    }
+                    
+                    bubble.element.style.top = bubble.y + 'px';
+                    bubble.element.style.left = bubble.x + 'px';
+                    
+                    if (bubble.y < -150 || bubble.y > this.gameArea.offsetHeight + 150) {
+                        if (bubble.element.parentNode) {
+                            bubble.element.parentNode.removeChild(bubble.element);
+                        }
+                        this.bubbles.splice(index, 1);
+                    }
+                });
+                
+                if (this.bubbles.length < this.maxBubbles - 5) {
+                    for (let i = 0; i < 2; i++) {
+                        this.createBubble();
+                    }
+                }
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            spawnLoop() {
+                if (!this.isGameRunning) return;
+                
+                const bubblesPerSpawn = 3 + Math.floor(Math.random() * 4);
+                for (let i = 0; i < bubblesPerSpawn; i++) {
+                    if (this.bubbles.length < this.maxBubbles) {
+                        setTimeout(() => {
+                            this.createBubble();
+                        }, i * 50);
+                    }
+                }
+                
+                setTimeout(() => this.spawnLoop(), this.spawnRate);
+            }
+
+            gameOver() {
+                this.isGameRunning = false;
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+
+            clearBubbles() {
+                this.bubbles.forEach(bubble => {
+                    if (bubble.element.parentNode) {
+                        bubble.element.parentNode.removeChild(bubble.element);
+                    }
+                });
+                this.bubbles = [];
+                
+                const leftoverElements = this.gameArea.querySelectorAll('.bubble, .particle, .score-popup, .combo-text, .death-explosion');
+                leftoverElements.forEach(element => {
+                    if (element.parentNode) {
+                        element.parentNode.removeChild(element);
+                    }
+                });
+            }
+        }
+
+        // Initialize game
+        const game = new RialoGame();
+
+        // Enable/disable start button
+        document.getElementById('playerName').addEventListener('input', function() {
+            document.getElementById('startGameBtn').disabled = this.value.trim() === '';
+        });
+
+        // Enter key support
+        document.getElementById('playerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim() !== '') {
+                startGame();
+            }
+        });
+
+        function startGame() {
+            const playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) return;
+            
+            game.setPlayerName(playerName);
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            
+            setTimeout(() => {
+                game.startGame();
+            }, 500);
+        }
+
+        function resetGame() {
+            game.startGame();
+        }
+
+        // Initialize
+        document.getElementById('startGameBtn').disabled = true;
+    </script>
+</body>
+</html>
